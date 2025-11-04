@@ -35,13 +35,14 @@ jobs:
         
     - name: Create build files
       run: |
+        # build.gradle app
         cat > app/build.gradle << 'EOF'
 apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 34
     buildToolsVersion "34.0.0"
-
+    
     defaultConfig {
         applicationId "com.emailextractor"
         minSdkVersion 21
@@ -49,14 +50,14 @@ android {
         versionCode 1
         versionName "1.0"
     }
-
+    
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -69,6 +70,7 @@ dependencies {
 }
 EOF
 
+        # Ana build.gradle
         cat > build.gradle << 'EOF'
 buildscript {
     repositories {
@@ -92,107 +94,20 @@ task clean(type: Delete) {
 }
 EOF
 
+        # settings.gradle
         echo "include ':app'" > settings.gradle
-        echo "android.useAndroidX=true" > gradle.properties
-        echo "android.enableJetifier=true" >> gradle.properties
-
-        echo "# Add project specific ProGuard rules here." > app/proguard-rules.pro
         
-        mkdir -p gradle/wrapper
-        cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
+        # gradle.properties
+        cat > gradle.properties << 'EOF'
+android.useAndroidX=true
+android.enableJetifier=true
 EOF
 
-        cat > gradlew << 'EOF'
-#!/bin/sh
-DEFAULT_JVM_OPTS=""
-APP_NAME="Gradle"
-APP_BASE_NAME=$(basename "$0")
-if [ -n "$JAVA_HOME" ] ; then
-    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-        JAVACMD="$JAVA_HOME/jre/sh/java"
-    else
-        JAVACMD="$JAVA_HOME/bin/java"
-    fi
-else
-    JAVACMD="java"
-    which java >/dev/null 2>&1 || {
-        echo "ERROR: JAVA_HOME is not set and java could not be found on your PATH." >&2
-        exit 1
-    }
-fi
-exec "$JAVACMD" "$@"
-EOF
-        chmod +x gradlew
-        
-    - name: Build with Gradle
-      run: |
-        ./gradlew assembleRelease
-        
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: email-extractor
-        path: app/build/outputs/apk/release/*.apk      run: |
-        cat > app/build.gradle << 'EOF'
-apply plugin: 'com.android.application'
-android {
-    compileSdkVersion 34
-    buildToolsVersion "34.0.0"
-    defaultConfig {
-        applicationId "com.emailextractor"
-        minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-}
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-}
-EOF
-
-        cat > build.gradle << 'EOF'
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.2'
-    }
-}
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-EOF
-
-        echo "include ':app'" > settings.gradle
-        echo "android.useAndroidX=true" > gradle.properties
+        # proguard rules
         mkdir -p app/proguard
         echo "# Add project specific ProGuard rules here." > app/proguard-rules.pro
         
+        # gradle wrapper properties
         mkdir -p gradle/wrapper
         cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
 distributionBase=GRADLE_USER_HOME
@@ -202,21 +117,36 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 EOF
 
+        # gradlew script
         cat > gradlew << 'EOF'
 #!/bin/sh
+
+##############################################################################
+# Gradle start up script for UN*X
+##############################################################################
+
+# Add default JVM options here
 DEFAULT_JVM_OPTS=""
+
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
+
+# Determine the Java command to use to start the JVM.
 if [ -n "$JAVA_HOME" ] ; then
     if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+        # IBM's JDK on AIX uses strange locations for the executables
         JAVACMD="$JAVA_HOME/jre/sh/java"
     else
         JAVACMD="$JAVA_HOME/bin/java"
     fi
 else
     JAVACMD="java"
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set"
+    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. Please set the JAVA_HOME variable in your environment to match the location of your Java installation."
 fi
+
+# Increase the maximum file descriptors if we can.
+ulimit -n $(( 4096 ))
+
 exec "$JAVACMD" $@
 EOF
         chmod +x gradlew
@@ -224,13 +154,6 @@ EOF
     - name: Build with Gradle
       run: |
         ./gradlew assembleRelease || echo "Build completed"
-        
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: email-extractor
-        path: app/build/outputs/apk/release/*.apk      run: |
-        echo "Build APK - using Gradle wrapper"
         
     - name: Upload APK
       uses: actions/upload-artifact@v4
