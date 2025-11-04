@@ -1,0 +1,36 @@
+name: Build Emre Baba APK
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Depoyu al
+      uses: actions/checkout@v3
+
+    - name: JDK kur
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Gradle önbellekle
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+    - name: APK derle
+      run: ./gradlew assembleRelease
+
+    - name: APK’yı yükle
+      uses: actions/upload-artifact@v3
+      with:
+        name: Emre-baba-APK
+        path: app/build/outputs/apk/release/*.apk
