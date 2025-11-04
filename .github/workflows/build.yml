@@ -33,122 +33,85 @@ jobs:
         cp EmailExtractor.java app/src/main/java/com/emailextractor/ 2>/dev/null || true
         cp AndroidManifest.xml app/src/main/ 2>/dev/null || true
         
-    - name: Create build files
+    - name: Create build.gradle files
       run: |
-        # build.gradle app
-        cat > app/build.gradle << 'EOF'
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion 34
-    buildToolsVersion "34.0.0"
-    
-    defaultConfig {
-        applicationId "com.emailextractor"
-        minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
-    }
-    
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-}
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-}
-EOF
-
-        # Ana build.gradle
-        cat > build.gradle << 'EOF'
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.2'
-    }
-}
-
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
-EOF
-
-        # settings.gradle
-        echo "include ':app'" > settings.gradle
+        echo 'apply plugin: com.android.application' > app/build.gradle
+        echo '' >> app/build.gradle
+        echo 'android {' >> app/build.gradle
+        echo '    compileSdkVersion 34' >> app/build.gradle
+        echo '    buildToolsVersion "34.0.0"' >> app/build.gradle
+        echo '    defaultConfig {' >> app/build.gradle
+        echo '        applicationId "com.emailextractor"' >> app/build.gradle
+        echo '        minSdkVersion 21' >> app/build.gradle
+        echo '        targetSdkVersion 34' >> app/build.gradle
+        echo '        versionCode 1' >> app/build.gradle
+        echo '        versionName "1.0"' >> app/build.gradle
+        echo '    }' >> app/build.gradle
+        echo '    buildTypes {' >> app/build.gradle
+        echo '        release {' >> app/build.gradle
+        echo '            minifyEnabled false' >> app/build.gradle
+        echo '            proguardFiles getDefaultProguardFile(proguard-android-optimize.txt), proguard-rules.pro' >> app/build.gradle
+        echo '        }' >> app/build.gradle
+        echo '    }' >> app/build.gradle
+        echo '    compileOptions {' >> app/build.gradle
+        echo '        sourceCompatibility JavaVersion.VERSION_1_8' >> app/build.gradle
+        echo '        targetCompatibility JavaVersion.VERSION_1_8' >> app/build.gradle
+        echo '    }' >> app/build.gradle
+        echo '}' >> app/build.gradle
+        echo 'dependencies {' >> app/build.gradle
+        echo '    implementation androidx.appcompat:appcompat:1.6.1' >> app/build.gradle
+        echo '    implementation com.google.android.material:material:1.10.0' >> app/build.gradle
+        echo '}' >> app/build.gradle
         
-        # gradle.properties
-        cat > gradle.properties << 'EOF'
-android.useAndroidX=true
-android.enableJetifier=true
-EOF
-
-        # proguard rules
+    - name: Create root build.gradle
+      run: |
+        echo 'buildscript {' > build.gradle
+        echo '    repositories {' >> build.gradle
+        echo '        google()' >> build.gradle
+        echo '        mavenCentral()' >> build.gradle
+        echo '    }' >> build.gradle
+        echo '    dependencies {' >> build.gradle
+        echo '        classpath com.android.tools.build:gradle:8.1.2' >> build.gradle
+        echo '    }' >> build.gradle
+        echo '}' >> build.gradle
+        echo '' >> build.gradle
+        echo 'allprojects {' >> build.gradle
+        echo '    repositories {' >> build.gradle
+        echo '        google()' >> build.gradle
+        echo '        mavenCentral()' >> build.gradle
+        echo '    }' >> build.gradle
+        echo '}' >> build.gradle
+        echo '' >> build.gradle
+        echo 'task clean(type: Delete) {' >> build.gradle
+        echo '    delete rootProject.buildDir' >> build.gradle
+        echo '}' >> build.gradle
+        
+    - name: Create settings.gradle
+      run: |
+        echo 'include ":app"' > settings.gradle
+        
+    - name: Create gradle.properties
+      run: |
+        echo 'android.useAndroidX=true' > gradle.properties
+        echo 'android.enableJetifier=true' >> gradle.properties
+        
+    - name: Create proguard rules
+      run: |
         mkdir -p app/proguard
-        echo "# Add project specific ProGuard rules here." > app/proguard-rules.pro
+        echo '# Add project specific ProGuard rules here.' > app/proguard-rules.pro
         
-        # gradle wrapper properties
+    - name: Create gradle wrapper
+      run: |
         mkdir -p gradle/wrapper
-        cat > gradle/wrapper/gradle-wrapper.properties << 'EOF'
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.4-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
-
-        # gradlew script
-        cat > gradlew << 'EOF'
-#!/bin/sh
-
-##############################################################################
-# Gradle start up script for UN*X
-##############################################################################
-
-# Add default JVM options here
-DEFAULT_JVM_OPTS=""
-
-APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
-
-# Determine the Java command to use to start the JVM.
-if [ -n "$JAVA_HOME" ] ; then
-    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
-        # IBM's JDK on AIX uses strange locations for the executables
-        JAVACMD="$JAVA_HOME/jre/sh/java"
-    else
-        JAVACMD="$JAVA_HOME/bin/java"
-    fi
-else
-    JAVACMD="java"
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. Please set the JAVA_HOME variable in your environment to match the location of your Java installation."
-fi
-
-# Increase the maximum file descriptors if we can.
-ulimit -n $(( 4096 ))
-
-exec "$JAVACMD" $@
-EOF
+        echo 'distributionBase=GRADLE_USER_HOME' > gradle/wrapper/gradle-wrapper.properties
+        echo 'distributionPath=wrapper/dists' >> gradle/wrapper/gradle-wrapper.properties
+        echo 'distributionUrl=https://services.gradle.org/distributions/gradle-8.4-bin.zip' >> gradle/wrapper/gradle-wrapper.properties
+        echo 'zipStoreBase=GRADLE_USER_HOME' >> gradle/wrapper/gradle-wrapper.properties
+        echo 'zipStorePath=wrapper/dists' >> gradle/wrapper/gradle-wrapper.properties
+        
+    - name: Create gradlew script
+      run: |
+        printf '#!/bin/sh\n\n#\n# Copyright 2015 the original author or authors.\n#\n# Licensed under the Apache License, Version 2.0 (the "License");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      https://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an "AS IS" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n#\n\n##############################################################################\n##\n##  Gradle start up script for UN*X\n##\n##############################################################################\n\n# Add default JVM options here\nDEFAULT_JVM_OPTS=""\n\nAPP_NAME="Gradle"\nAPP_BASE_NAME=`basename "$0"`\n\n# Determine the Java command to use to start the JVM.\nif [ -n "$JAVA_HOME" ] ; then\n    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then\n        JAVACMD="$JAVA_HOME/jre/sh/java"\n    else\n        JAVACMD="$JAVA_HOME/bin/java"\n    fi\n    if [ ! -x "$JAVACMD" ] ; then\n        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation."\n    fi\nelse\n    JAVACMD="java"\n    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no '\''java'\'' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation."\nfi\n\n# Increase the maximum file descriptors if we can.\nulimit -n $(( 4096 ))\n\n# Collect all arguments for the java command\neval "set -- $DEFAULT_JVM_OPTS $JAVA_OPTS -classpath \"\$CLASSPATH\" org.gradle.wrapper.GradleWrapperMain \"$@\""\n\nexec "$JAVACMD" "$@"\n' > gradlew
         chmod +x gradlew
         
     - name: Build with Gradle
